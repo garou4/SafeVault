@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +10,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { KeyRound, Eye, EyeOff, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { KeyRound, Eye, EyeOff, ShieldCheck, CheckCircle2, Lock } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 
 interface SetMasterPasswordDialogProps {
@@ -28,26 +28,53 @@ export const SetMasterPasswordDialog: React.FC<SetMasterPasswordDialogProps> = (
   onClose,
   onSaveMasterPassword,
 }) => {
-  const [password, setPassword] = useState(currentMasterPassword);
-  const [confirmPassword, setConfirmPassword] = useState(currentMasterPassword);
+  const [oldPassword, setOldPassword] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [hint, setHint] = useState(currentHint);
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState("");
 
+  const hasExistingPassword = Boolean(currentMasterPassword && currentMasterPassword.trim().length > 0);
+
+  useEffect(() => {
+    if (isOpen) {
+      setOldPassword("");
+      setPassword("");
+      setConfirmPassword("");
+      setHint(currentHint);
+      setError("");
+    }
+  }, [isOpen, currentHint]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    setError("");
+
+    // If a master password exists, verify old password first
+    if (hasExistingPassword) {
+      if (!oldPassword) {
+        setError("Please enter your current master password");
+        return;
+      }
+      if (oldPassword !== currentMasterPassword) {
+        setError("Current master password is incorrect");
+        return;
+      }
+    }
+
     if (!password.trim()) {
-      setError("Master password cannot be empty");
+      setError("New master password cannot be empty");
       return;
     }
 
     if (password.length < 4) {
-      setError("Password must be at least 4 characters long");
+      setError("New password must be at least 4 characters long");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError("New passwords do not match");
       return;
     }
 
@@ -64,10 +91,12 @@ export const SetMasterPasswordDialog: React.FC<SetMasterPasswordDialogProps> = (
             <KeyRound className="w-6 h-6" />
           </div>
           <DialogTitle className="text-center text-xl font-bold">
-            Set Universal Master Password
+            {hasExistingPassword ? "Change Master Password" : "Set Universal Master Password"}
           </DialogTitle>
           <DialogDescription className="text-center text-slate-500 text-xs">
-            Choose a Master Password that can override and unlock <span className="font-semibold text-slate-700 dark:text-slate-300">all protected folders</span> in your vault.
+            {hasExistingPassword
+              ? "Enter your current master password to verify identity before setting a new one."
+              : "Choose a Master Password that can override and unlock all protected folders in your vault."}
           </DialogDescription>
         </DialogHeader>
 
@@ -78,6 +107,34 @@ export const SetMasterPasswordDialog: React.FC<SetMasterPasswordDialogProps> = (
             </div>
           )}
 
+          {/* Current Password Field (Required if already configured) */}
+          {hasExistingPassword && (
+            <div className="space-y-1.5 p-3 rounded-xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800">
+              <Label htmlFor="old-master-pass" className="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Lock className="w-3.5 h-3.5 text-amber-500" /> Current Master Password *
+              </Label>
+              <div className="relative">
+                <Input
+                  id="old-master-pass"
+                  type={showPass ? "text" : "password"}
+                  placeholder="Enter current master password..."
+                  value={oldPassword}
+                  onChange={(e) => { setOldPassword(e.target.value); setError(""); }}
+                  className="pr-10 font-mono text-sm bg-white dark:bg-slate-950"
+                  autoFocus
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                >
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* New Master Password */}
           <div className="space-y-1.5">
             <Label htmlFor="new-master-pass" className="text-xs font-semibold">
               New Master Password *
@@ -90,26 +147,28 @@ export const SetMasterPasswordDialog: React.FC<SetMasterPasswordDialogProps> = (
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
                 className="pr-10 font-mono text-sm"
-                autoFocus
+                autoFocus={!hasExistingPassword}
               />
-              <button
-                type="button"
-                onClick={() => setShowPass(!showPass)}
-                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
-              >
-                {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
+              {!hasExistingPassword && (
+                <button
+                  type="button"
+                  onClick={() => setShowPass(!showPass)}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                >
+                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              )}
             </div>
           </div>
 
           <div className="space-y-1.5">
             <Label htmlFor="confirm-master-pass" className="text-xs font-semibold">
-              Confirm Master Password *
+              Confirm New Master Password *
             </Label>
             <Input
               id="confirm-master-pass"
               type={showPass ? "text" : "password"}
-              placeholder="Re-enter master password..."
+              placeholder="Re-enter new master password..."
               value={confirmPassword}
               onChange={(e) => { setConfirmPassword(e.target.value); setError(""); }}
               className="font-mono text-sm"
