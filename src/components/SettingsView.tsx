@@ -3,15 +3,15 @@ import { VaultSettings, FolderItem } from "@/types/vault";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShieldCheck, Lock, RefreshCw, KeyRound, CheckCircle2, Eye, EyeOff, Save } from "lucide-react";
+import { ShieldCheck, Lock, RefreshCw, KeyRound, CheckCircle2, Edit3 } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 
 interface SettingsViewProps {
   settings: VaultSettings;
   folders: FolderItem[];
   onUpdateSettings: (newSettings: VaultSettings) => void;
+  onOpenSetMasterPassword: () => void;
   onLockAll: () => void;
   onResetAllData: () => void;
 }
@@ -20,24 +20,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   settings,
   folders,
   onUpdateSettings,
+  onOpenSetMasterPassword,
   onLockAll,
   onResetAllData,
 }) => {
   const protectedFolders = folders.filter((f) => f.isPasswordProtected);
-
-  const [masterPassInput, setMasterPassInput] = useState(settings.masterPassword || "admin");
-  const [masterHintInput, setMasterHintInput] = useState(settings.masterPasswordHint || "Default master password (admin)");
-  const [showMasterPass, setShowMasterPass] = useState(false);
-
-  const handleSaveMasterPass = (e: React.FormEvent) => {
-    e.preventDefault();
-    onUpdateSettings({
-      ...settings,
-      masterPassword: masterPassInput.trim(),
-      masterPasswordHint: masterHintInput.trim(),
-    });
-    showSuccess("Master Password updated successfully!");
-  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -52,56 +39,36 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Master Password Panel */}
       <div className="bg-white dark:bg-slate-900 border border-emerald-500/30 rounded-2xl p-6 space-y-4 shadow-sm">
-        <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100 text-lg">
-          <KeyRound className="w-5 h-5 text-emerald-600" /> Master Password Management
-        </div>
-        <p className="text-xs text-slate-500">
-          Your Master Password serves as a universal master key. You can enter this password on any locked folder to open it.
-        </p>
-
-        <form onSubmit={handleSaveMasterPass} className="space-y-4 pt-2">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="master-pass-setting" className="text-xs font-semibold">
-                Set Master Password *
-              </Label>
-              <div className="relative">
-                <Input
-                  id="master-pass-setting"
-                  type={showMasterPass ? "text" : "password"}
-                  placeholder="Set master password..."
-                  value={masterPassInput}
-                  onChange={(e) => setMasterPassInput(e.target.value)}
-                  className="pr-10 text-sm font-mono"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowMasterPass(!showMasterPass)}
-                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
-                >
-                  {showMasterPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100 text-lg">
+              <KeyRound className="w-5 h-5 text-emerald-600" /> Universal Master Password
             </div>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="master-hint-setting" className="text-xs font-semibold">
-                Master Password Hint
-              </Label>
-              <Input
-                id="master-hint-setting"
-                placeholder="e.g. Favorite childhood pet name"
-                value={masterHintInput}
-                onChange={(e) => setMasterHintInput(e.target.value)}
-                className="text-xs"
-              />
-            </div>
+            <p className="text-xs text-slate-500">
+              Your Master Password serves as a universal override key to open any locked folder.
+            </p>
           </div>
 
-          <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5">
-            <Save className="w-3.5 h-3.5" /> Save Master Password
+          <Button
+            onClick={onOpenSetMasterPassword}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5 shrink-0"
+          >
+            <Edit3 className="w-3.5 h-3.5" /> Change Master Password
           </Button>
-        </form>
+        </div>
+
+        <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-mono">
+          <span className="text-slate-500">Master Password:</span>
+          <span className="font-bold text-emerald-600 dark:text-emerald-400">
+            {settings.masterPassword ? "••••••••" : "Not Configured"}
+          </span>
+        </div>
+
+        {settings.masterPasswordHint && (
+          <div className="text-xs text-slate-500">
+            <span className="font-semibold text-slate-700 dark:text-slate-300">Password Hint:</span> {settings.masterPasswordHint}
+          </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
