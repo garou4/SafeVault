@@ -16,10 +16,11 @@ import { FolderCard } from "@/components/FolderCard";
 import { DocumentCard } from "@/components/DocumentCard";
 import { PasswordModal } from "@/components/PasswordModal";
 import { CreateFolderDialog } from "@/components/CreateFolderDialog";
+import { EditFolderDialog } from "@/components/EditFolderDialog";
 import { CreateDocumentDialog } from "@/components/CreateDocumentDialog";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { SettingsView } from "@/components/SettingsView";
-import { showSuccess, showError } from "@/utils/toast";
+import { showSuccess } from "@/utils/toast";
 import { Lock, FolderOpen, ArrowLeft, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -39,6 +40,7 @@ const Index: React.FC = () => {
 
   // Modals state
   const [passwordFolder, setPasswordFolder] = useState<FolderItem | null>(null);
+  const [editingFolder, setEditingFolder] = useState<FolderItem | null>(null);
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isCreateDocumentOpen, setIsCreateDocumentOpen] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<DocumentItem | null>(null);
@@ -156,11 +158,38 @@ const Index: React.FC = () => {
       isPasswordProtected: data.isPasswordProtected,
       password: data.password,
       passwordHint: data.passwordHint,
-      isUnlocked: true, // newly created is unlocked initially for author
+      isUnlocked: true,
       isFavorite: false,
       createdAt: new Date().toISOString(),
     };
     setFolders((prev) => [newFolder, ...prev]);
+  };
+
+  // Update existing folder (rename, change password/color)
+  const handleUpdateFolder = (data: {
+    id: string;
+    name: string;
+    description: string;
+    color: string;
+    isPasswordProtected: boolean;
+    password?: string;
+    passwordHint?: string;
+  }) => {
+    setFolders((prev) =>
+      prev.map((f) =>
+        f.id === data.id
+          ? {
+              ...f,
+              name: data.name,
+              description: data.description,
+              color: data.color,
+              isPasswordProtected: data.isPasswordProtected,
+              password: data.password,
+              passwordHint: data.passwordHint,
+            }
+          : f
+      )
+    );
   };
 
   // Create new document
@@ -241,21 +270,16 @@ const Index: React.FC = () => {
 
   const filteredDocuments = useMemo(() => {
     return documents.filter((d) => {
-      // 1. Navigation location filter
       if (selectedFolderId !== null) {
         if (d.folderId !== selectedFolderId) return false;
       } else if (currentNav === "favorites") {
         if (!d.isFavorite) return false;
-      } else if (currentNav === "recents") {
-        // sorted recent below
       }
 
-      // 2. Type filter
       if (selectedTypeFilter !== "all" && d.type !== selectedTypeFilter) {
         return false;
       }
 
-      // 3. Search query filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const matchesName = d.name.toLowerCase().includes(q);
@@ -273,7 +297,6 @@ const Index: React.FC = () => {
     });
   }, [documents, selectedFolderId, currentNav, selectedTypeFilter, searchQuery]);
 
-  // Is active view inside a locked folder?
   const isInsideLockedFolder = currentFolder && currentFolder.isPasswordProtected && !currentFolder.isUnlocked;
 
   return (
@@ -333,7 +356,7 @@ const Index: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold">This Vault is Locked</h3>
               <p className="text-sm text-slate-500">
-                You must enter the password to view files inside "{currentFolder.name}".
+                Enter the folder password or Master Password to access "{currentFolder.name}".
               </p>
               <div className="pt-2 flex justify-center gap-3">
                 <Button variant="outline" onClick={() => setSelectedFolderId(null)}>
@@ -349,7 +372,7 @@ const Index: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-8">
-              {/* Breadcrumb Navigation when inside folder */}
+              {/* Breadcrumb Navigation */}
               {selectedFolderId && (
                 <div className="flex items-center gap-2 text-xs text-slate-500 pb-2 border-b">
                   <button
@@ -379,6 +402,7 @@ const Index: React.FC = () => {
                         folder={f}
                         itemCount={documents.filter((d) => d.folderId === f.id).length}
                         onOpenFolder={handleOpenFolder}
+                        onEditFolder={(folderToEdit) => setEditingFolder(folderToEdit)}
                         onToggleFavorite={toggleFolderFavorite}
                         onLockFolder={() => {
                           setFolders((prev) =>
@@ -448,6 +472,7 @@ const Index: React.FC = () => {
       {/* Modals */}
       <PasswordModal
         folder={passwordFolder}
+        masterPassword={settings.masterPassword}
         isOpen={!!passwordFolder}
         onClose={() => setPasswordFolder(null)}
         onSuccess={handleUnlockFolderSuccess}
@@ -457,6 +482,13 @@ const Index: React.FC = () => {
         isOpen={isCreateFolderOpen}
         onClose={() => setIsCreateFolderOpen(false)}
         onCreateFolder={handleCreateFolder}
+      />
+
+      <EditFolderDialog
+        folder={editingFolder}
+        isOpen={!!editingFolder}
+        onClose={() => setEditingFolder(null)}
+        onUpdateFolder={handleUpdateFolder}
       />
 
       <CreateDocumentDialog

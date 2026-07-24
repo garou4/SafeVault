@@ -10,12 +10,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Lock, KeyRound, Eye, EyeOff, AlertCircle, HelpCircle } from "lucide-react";
+import { Lock, KeyRound, Eye, EyeOff, AlertCircle, HelpCircle, ShieldCheck } from "lucide-react";
 import { FolderItem } from "@/types/vault";
-import { showError, showSuccess } from "@/utils/toast";
+import { showSuccess } from "@/utils/toast";
 
 interface PasswordModalProps {
   folder: FolderItem | null;
+  masterPassword?: string;
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (folderId: string) => void;
@@ -23,6 +24,7 @@ interface PasswordModalProps {
 
 export const PasswordModal: React.FC<PasswordModalProps> = ({
   folder,
+  masterPassword,
   isOpen,
   onClose,
   onSuccess,
@@ -38,19 +40,26 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
     if (!password) {
-      setErrorMsg("Please enter the folder password");
+      setErrorMsg("Please enter the password");
       return;
     }
 
-    if (folder.password && password === folder.password) {
-      showSuccess(`Unlocked "${folder.name}"`);
+    const isFolderPassValid = folder.password && password === folder.password;
+    const isMasterPassValid = masterPassword && password === masterPassword;
+
+    if (isFolderPassValid || isMasterPassValid) {
+      if (isMasterPassValid && !isFolderPassValid) {
+        showSuccess(`Unlocked "${folder.name}" using Master Password`);
+      } else {
+        showSuccess(`Unlocked "${folder.name}"`);
+      }
       setPassword("");
       setErrorMsg("");
       setShowHint(false);
       onSuccess(folder.id);
       onClose();
     } else {
-      setErrorMsg("Incorrect password. Please try again.");
+      setErrorMsg("Incorrect password. Try folder password or Master Password.");
       setIsShaking(true);
       setTimeout(() => setIsShaking(false), 500);
     }
@@ -67,13 +76,13 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
             Protected Vault Folder
           </DialogTitle>
           <DialogDescription className="text-center text-slate-500">
-            Enter the password to access contents inside <span className="font-semibold text-slate-800 dark:text-slate-200">{folder.name}</span>
+            Enter the folder password or Master Password to access <span className="font-semibold text-slate-800 dark:text-slate-200">{folder.name}</span>
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleUnlock} className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label htmlFor="vault-password">Folder Password</Label>
+            <Label htmlFor="vault-password">Folder Password or Master Password</Label>
             <div className="relative">
               <Input
                 id="vault-password"
@@ -94,8 +103,13 @@ export const PasswordModal: React.FC<PasswordModalProps> = ({
             </div>
           </div>
 
+          <div className="text-[11px] text-slate-500 flex items-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+            <span>Master Password works to unlock any folder.</span>
+          </div>
+
           {errorMsg && (
-            <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 dark:bg-red-950/40 p-2.5 rounded-lg">
+            <div className="flex items-center gap-2 text-xs text-red-600 bg-red-50 dark:bg-red-950/40 p-2.5 rounded-lg">
               <AlertCircle className="w-4 h-4 shrink-0" />
               <span>{errorMsg}</span>
             </div>

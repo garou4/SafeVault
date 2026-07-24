@@ -1,6 +1,6 @@
 import React from "react";
 import { FolderItem } from "@/types/vault";
-import { Lock, Unlock, Star, MoreVertical, Shield, FileText } from "lucide-react";
+import { Lock, Unlock, Star, MoreVertical, Shield, FileText, Edit3 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,7 @@ interface FolderCardProps {
   folder: FolderItem;
   itemCount: number;
   onOpenFolder: (folder: FolderItem) => void;
+  onEditFolder: (folder: FolderItem) => void;
   onToggleFavorite: (folderId: string) => void;
   onLockFolder: (folderId: string) => void;
   onDeleteFolder: (folderId: string) => void;
@@ -22,6 +23,7 @@ export const FolderCard: React.FC<FolderCardProps> = ({
   folder,
   itemCount,
   onOpenFolder,
+  onEditFolder,
   onToggleFavorite,
   onLockFolder,
   onDeleteFolder,
@@ -71,9 +73,12 @@ export const FolderCard: React.FC<FolderCardProps> = ({
                   <MoreVertical className="w-4 h-4" />
                 </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuContent align="end" className="w-44">
                 <DropdownMenuItem onClick={() => onOpenFolder(folder)}>
                   Open Vault
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onEditFolder(folder)}>
+                  <Edit3 className="w-3.5 h-3.5 mr-2 text-slate-500" /> Rename / Edit
                 </DropdownMenuItem>
                 {folder.isPasswordProtected && folder.isUnlocked && (
                   <DropdownMenuItem onClick={() => onLockFolder(folder.id)}>

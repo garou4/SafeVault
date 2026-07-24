@@ -170,6 +170,8 @@ export const INITIAL_DOCUMENTS: DocumentItem[] = [
 ];
 
 export const INITIAL_SETTINGS: VaultSettings = {
+  masterPassword: "admin",
+  masterPasswordHint: "Default master password (admin)",
   autoLockMinutes: 5,
   lockOnTabBlur: false,
   enableEncryptionBadge: true,
@@ -181,7 +183,6 @@ export function loadFolders(): FolderItem[] {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      // Ensure password protected ones start LOCKED on load
       return parsed.map((f: FolderItem) => ({
         ...f,
         isUnlocked: f.isPasswordProtected ? false : true,
@@ -194,7 +195,6 @@ export function loadFolders(): FolderItem[] {
 }
 
 export function saveFolders(folders: FolderItem[]) {
-  // Store without leaking active unlock state into persist if desired, or persist as is
   localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
 }
 

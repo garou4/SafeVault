@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import { VaultSettings, FolderItem } from "@/types/vault";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ShieldCheck, Lock, RefreshCw, KeyRound, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, Lock, RefreshCw, KeyRound, CheckCircle2, Eye, EyeOff, Save } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 
 interface SettingsViewProps {
@@ -24,15 +25,83 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 }) => {
   const protectedFolders = folders.filter((f) => f.isPasswordProtected);
 
+  const [masterPassInput, setMasterPassInput] = useState(settings.masterPassword || "admin");
+  const [masterHintInput, setMasterHintInput] = useState(settings.masterPasswordHint || "Default master password (admin)");
+  const [showMasterPass, setShowMasterPass] = useState(false);
+
+  const handleSaveMasterPass = (e: React.FormEvent) => {
+    e.preventDefault();
+    onUpdateSettings({
+      ...settings,
+      masterPassword: masterPassInput.trim(),
+      masterPasswordHint: masterHintInput.trim(),
+    });
+    showSuccess("Master Password updated successfully!");
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-          <ShieldCheck className="w-7 h-7 text-emerald-600" /> Security & Vault Preferences
+          <ShieldCheck className="w-7 h-7 text-emerald-600" /> Security & Master Password
         </h2>
         <p className="text-sm text-slate-500 mt-1">
-          Configure password policies, auto-locking behaviors, and local encryption settings.
+          Set a Master Password that can unlock any folder in your vault.
         </p>
+      </div>
+
+      {/* Master Password Panel */}
+      <div className="bg-white dark:bg-slate-900 border border-emerald-500/30 rounded-2xl p-6 space-y-4 shadow-sm">
+        <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100 text-lg">
+          <KeyRound className="w-5 h-5 text-emerald-600" /> Master Password Management
+        </div>
+        <p className="text-xs text-slate-500">
+          Your Master Password serves as a universal master key. You can enter this password on any locked folder to open it.
+        </p>
+
+        <form onSubmit={handleSaveMasterPass} className="space-y-4 pt-2">
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="master-pass-setting" className="text-xs font-semibold">
+                Set Master Password *
+              </Label>
+              <div className="relative">
+                <Input
+                  id="master-pass-setting"
+                  type={showMasterPass ? "text" : "password"}
+                  placeholder="Set master password..."
+                  value={masterPassInput}
+                  onChange={(e) => setMasterPassInput(e.target.value)}
+                  className="pr-10 text-sm font-mono"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowMasterPass(!showMasterPass)}
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600"
+                >
+                  {showMasterPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="master-hint-setting" className="text-xs font-semibold">
+                Master Password Hint
+              </Label>
+              <Input
+                id="master-hint-setting"
+                placeholder="e.g. Favorite childhood pet name"
+                value={masterHintInput}
+                onChange={(e) => setMasterHintInput(e.target.value)}
+                className="text-xs"
+              />
+            </div>
+          </div>
+
+          <Button type="submit" className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-1.5">
+            <Save className="w-3.5 h-3.5" /> Save Master Password
+          </Button>
+        </form>
       </div>
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -85,7 +154,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* Protected Vault Summary */}
         <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 space-y-4 shadow-sm">
           <h3 className="font-bold text-slate-800 dark:text-slate-100 flex items-center gap-2 text-base">
-            <KeyRound className="w-5 h-5 text-amber-500" /> Password Protected Vaults
+            <KeyRound className="w-5 h-5 text-amber-500" /> Protected Vaults Overview
           </h3>
 
           <div className="space-y-2 pt-1 max-h-[160px] overflow-y-auto pr-1">
@@ -112,14 +181,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       </div>
 
-      {/* Encryption badge status & reset */}
+      {/* Reset data */}
       <div className="bg-slate-900 text-slate-200 rounded-2xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 border border-slate-800 shadow-md">
         <div className="space-y-1">
           <div className="flex items-center gap-2 font-bold text-white text-base">
-            <CheckCircle2 className="w-5 h-5 text-emerald-400" /> Simulated Zero-Knowledge AES Storage
+            <CheckCircle2 className="w-5 h-5 text-emerald-400" /> Local Storage Encryption Active
           </div>
           <p className="text-xs text-slate-400">
-            Files and notes are saved locally in your browser cache. Clear data resets to demo seed values.
+            Files and folders are stored safely in browser storage. Reset restores initial demo vaults.
           </p>
         </div>
 
