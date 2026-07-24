@@ -98,7 +98,9 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
                 {doc.name}
               </p>
               {doc.isConfidential && (
-                <Shield className="w-3.5 h-3.5 text-amber-500 shrink-0" title="Confidential" />
+                <span title="Confidential" className="shrink-0">
+                  <Shield className="w-3.5 h-3.5 text-amber-500" />
+                </span>
               )}
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
@@ -217,7 +219,9 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
               {doc.name}
             </h4>
             {doc.isConfidential && (
-              <Shield className="w-3.5 h-3.5 text-amber-500 shrink-0" title="Confidential" />
+              <span title="Confidential" className="shrink-0">
+                <Shield className="w-3.5 h-3.5 text-amber-500" />
+              </span>
             )}
           </div>
           <p className="text-xs text-slate-400 mt-1 line-clamp-2 font-mono bg-slate-50 dark:bg-slate-950 p-1.5 rounded border border-slate-100 dark:border-slate-800">
