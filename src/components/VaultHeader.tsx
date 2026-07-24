@@ -70,12 +70,14 @@ export const VaultHeader: React.FC<VaultHeaderProps> = ({
         </div>
 
         <Select value={selectedType} onValueChange={onTypeChange}>
-          <SelectTrigger className="w-[120px] h-9 text-xs bg-slate-50 dark:bg-slate-950">
+          <SelectTrigger className="w-[130px] h-9 text-xs bg-slate-50 dark:bg-slate-950">
             <SelectValue placeholder="All Types" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All File Types</SelectItem>
             <SelectItem value="pdf">📄 PDFs</SelectItem>
+            <SelectItem value="word">📘 Word (.docx)</SelectItem>
+            <SelectItem value="gdoc">🔗 Google Docs</SelectItem>
             <SelectItem value="image">🖼️ Images</SelectItem>
             <SelectItem value="note">📝 Notes</SelectItem>
             <SelectItem value="spreadsheet">📊 Spreadsheets</SelectItem>

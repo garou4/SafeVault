@@ -14,6 +14,8 @@ import {
   Eye,
   MoreVertical,
   Trash2,
+  FileCode,
+  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -43,6 +45,10 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
     switch (doc.type) {
       case "pdf":
         return <FileText className="w-5 h-5 text-red-500" />;
+      case "word":
+        return <FileCode className="w-5 h-5 text-blue-600" />;
+      case "gdoc":
+        return <ExternalLink className="w-5 h-5 text-blue-500" />;
       case "image":
         return <ImageIcon className="w-5 h-5 text-indigo-500" />;
       case "spreadsheet":
@@ -58,9 +64,18 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
 
   const handleDownload = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (doc.type === "gdoc" && doc.content) {
+      window.open(doc.content, "_blank");
+      return;
+    }
+
     const element = document.createElement("a");
-    const file = new Blob([doc.content || "SafeVault Protected File Content"], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
+    if (doc.fileDataUrl) {
+      element.href = doc.fileDataUrl;
+    } else {
+      const file = new Blob([doc.content || "SafeVault Protected File Content"], { type: "text/plain" });
+      element.href = URL.createObjectURL(file);
+    }
     element.download = doc.name;
     document.body.appendChild(element);
     element.click();
@@ -87,7 +102,7 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
               )}
             </div>
             <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-              <span>{formatBytes(doc.sizeBytes)}</span>
+              <span>{doc.type === "gdoc" ? "Google Doc Link" : formatBytes(doc.sizeBytes)}</span>
               <span>•</span>
               <span>{new Date(doc.createdAt).toLocaleDateString()}</span>
             </div>
@@ -115,9 +130,9 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
           <button
             onClick={handleDownload}
             className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-md"
-            title="Download file"
+            title={doc.type === "gdoc" ? "Open Google Doc" : "Download file"}
           >
-            <Download className="w-4 h-4" />
+            {doc.type === "gdoc" ? <ExternalLink className="w-4 h-4" /> : <Download className="w-4 h-4" />}
           </button>
 
           <DropdownMenu>
@@ -131,7 +146,8 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
                 <Eye className="w-4 h-4 mr-2" /> Preview Document
               </DropdownMenuItem>
               <DropdownMenuItem onClick={handleDownload}>
-                <Download className="w-4 h-4 mr-2" /> Download
+                {doc.type === "gdoc" ? <ExternalLink className="w-4 h-4 mr-2" /> : <Download className="w-4 h-4 mr-2" />}
+                {doc.type === "gdoc" ? "Open Link" : "Download"}
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem
@@ -180,7 +196,8 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
                   <Eye className="w-4 h-4 mr-2" /> Quick View
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownload}>
-                  <Download className="w-4 h-4 mr-2" /> Download
+                  {doc.type === "gdoc" ? <ExternalLink className="w-4 h-4 mr-2" /> : <Download className="w-4 h-4 mr-2" />}
+                  {doc.type === "gdoc" ? "Open Link" : "Download"}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
@@ -204,13 +221,13 @@ export const DocumentCard: React.FC<DocumentCardProps> = ({
             )}
           </div>
           <p className="text-xs text-slate-400 mt-1 line-clamp-2 font-mono bg-slate-50 dark:bg-slate-950 p-1.5 rounded border border-slate-100 dark:border-slate-800">
-            {doc.content || "No preview snippet available"}
+            {doc.type === "gdoc" ? doc.content : (doc.content || "No preview snippet available")}
           </p>
         </div>
       </div>
 
       <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-3 flex items-center justify-between text-xs text-slate-400">
-        <span>{formatBytes(doc.sizeBytes)}</span>
+        <span>{doc.type === "gdoc" ? "Google Doc" : formatBytes(doc.sizeBytes)}</span>
         <div className="flex items-center gap-1">
           {doc.tags.slice(0, 1).map((t) => (
             <Badge key={t} variant="secondary" className="text-[10px]">

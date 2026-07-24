@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DocumentItem } from "@/types/vault";
 import { formatBytes } from "@/utils/vaultStorage";
-import { Download, Shield, FileText, Image as ImageIcon, Copy, Check } from "lucide-react";
+import { Download, Shield, FileText, Image as ImageIcon, Copy, Check, ExternalLink, FileCode } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 
 interface DocumentPreviewModalProps {
@@ -38,14 +38,114 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
   };
 
   const handleDownload = () => {
+    if (doc.type === "gdoc" && doc.content) {
+      window.open(doc.content, "_blank");
+      return;
+    }
+
     const element = document.createElement("a");
-    const file = new Blob([doc.content || "SafeVault Protected File Content"], { type: "text/plain" });
-    element.href = URL.createObjectURL(file);
+    if (doc.fileDataUrl) {
+      element.href = doc.fileDataUrl;
+    } else {
+      const file = new Blob([doc.content || "SafeVault Protected File Content"], { type: "text/plain" });
+      element.href = URL.createObjectURL(file);
+    }
     element.download = doc.name;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
     showSuccess(`Downloaded ${doc.name}`);
+  };
+
+  const renderViewer = () => {
+    // 1. Embedded PDF Viewer
+    if (doc.type === "pdf" && doc.fileDataUrl) {
+      return (
+        <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-900 h-[400px]">
+          <iframe
+            src={doc.fileDataUrl}
+            title={doc.name}
+            className="w-full h-full border-0"
+          />
+        </div>
+      );
+    }
+
+    // 2. Google Doc Link
+    if (doc.type === "gdoc") {
+      return (
+        <div className="p-8 text-center bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
+            <ExternalLink className="w-7 h-7" />
+          </div>
+          <div>
+            <h4 className="font-bold text-base text-slate-800 dark:text-slate-100">Google Docs / Drive Document</h4>
+            <p className="text-xs text-slate-500 font-mono mt-1 break-all px-4">
+              {doc.content}
+            </p>
+          </div>
+          <Button
+            onClick={() => window.open(doc.content, "_blank")}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs gap-2"
+          >
+            <ExternalLink className="w-4 h-4" /> Open in Google Docs
+          </Button>
+        </div>
+      );
+    }
+
+    // 3. Word Document Preview
+    if (doc.type === "word") {
+      return (
+        <div className="p-8 text-center bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800 space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto">
+            <FileCode className="w-7 h-7" />
+          </div>
+          <div>
+            <h4 className="font-bold text-base text-slate-800 dark:text-slate-100">Microsoft Word Document</h4>
+            <p className="text-xs text-slate-500 mt-1">
+              Word files are encrypted and ready for direct download to view in Microsoft Word or Pages.
+            </p>
+          </div>
+          <Button
+            onClick={handleDownload}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white text-xs gap-2"
+          >
+            <Download className="w-4 h-4" /> Download Word File
+          </Button>
+        </div>
+      );
+    }
+
+    // 4. Image Scan Preview
+    if (doc.type === "image" && (doc.fileDataUrl || doc.previewUrl)) {
+      return (
+        <div className="rounded-xl overflow-hidden border bg-slate-900 flex items-center justify-center min-h-[250px]">
+          <img
+            src={doc.fileDataUrl || doc.previewUrl}
+            alt={doc.name}
+            className="max-h-[350px] object-contain"
+          />
+        </div>
+      );
+    }
+
+    // 5. Encrypted Code/Text snippet
+    return (
+      <div className="bg-slate-950 text-emerald-400 font-mono text-xs p-4 rounded-xl border border-slate-800 shadow-inner relative group">
+        <button
+          onClick={handleCopyContent}
+          className="absolute top-3 right-3 bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 rounded-md text-xs flex items-center gap-1 transition-colors"
+          title="Copy content"
+        >
+          {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
+          <span>{copied ? "Copied" : "Copy"}</span>
+        </button>
+        <pre className="whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[300px] overflow-y-auto pr-8">
+          {doc.content || "Empty document content"}
+        </pre>
+      </div>
+    );
   };
 
   return (
@@ -62,7 +162,7 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
               <div>
                 <DialogTitle className="text-lg font-bold line-clamp-1">{doc.name}</DialogTitle>
                 <div className="flex items-center gap-2 text-xs text-slate-500 mt-1">
-                  <span>Size: {formatBytes(doc.sizeBytes)}</span>
+                  <span>Size: {doc.type === "gdoc" ? "Google Doc" : formatBytes(doc.sizeBytes)}</span>
                   <span>•</span>
                   <span>Added: {new Date(doc.createdAt).toLocaleDateString()}</span>
                 </div>
@@ -86,37 +186,20 @@ export const DocumentPreviewModal: React.FC<DocumentPreviewModalProps> = ({
             ))}
           </div>
 
-          {doc.type === "image" && doc.previewUrl ? (
-            <div className="rounded-xl overflow-hidden border bg-slate-900 flex items-center justify-center min-h-[250px]">
-              <img src={doc.previewUrl} alt={doc.name} className="max-h-[350px] object-contain" />
-            </div>
-          ) : (
-            <div className="bg-slate-950 text-emerald-400 font-mono text-xs p-4 rounded-xl border border-slate-800 shadow-inner relative group">
-              <button
-                onClick={handleCopyContent}
-                className="absolute top-3 right-3 bg-slate-800 hover:bg-slate-700 text-slate-200 p-1.5 rounded-md text-xs flex items-center gap-1 transition-colors"
-                title="Copy content"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                <span>{copied ? "Copied" : "Copy"}</span>
-              </button>
-              <pre className="whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[300px] overflow-y-auto pr-8">
-                {doc.content || "Empty document content"}
-              </pre>
-            </div>
-          )}
+          {renderViewer()}
         </div>
 
         <DialogFooter className="border-t pt-3 flex items-center justify-between sm:justify-between">
           <div className="text-xs text-slate-500 flex items-center gap-1.5">
-            <Shield className="w-3.5 h-3.5 text-emerald-600" /> Verified 256-Bit Decrypted View
+            <Shield className="w-3.5 h-3.5 text-emerald-600" /> Verified Decrypted View
           </div>
           <div className="flex items-center gap-2">
             <Button variant="outline" onClick={onClose}>
               Close
             </Button>
             <Button onClick={handleDownload} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
-              <Download className="w-4 h-4" /> Download File
+              {doc.type === "gdoc" ? <ExternalLink className="w-4 h-4" /> : <Download className="w-4 h-4" />}
+              {doc.type === "gdoc" ? "Open Link" : "Download File"}
             </Button>
           </div>
         </DialogFooter>

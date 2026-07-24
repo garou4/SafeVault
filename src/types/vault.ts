@@ -1,4 +1,4 @@
-export type FileType = 'pdf' | 'image' | 'note' | 'spreadsheet' | 'code' | 'archive';
+export type FileType = 'pdf' | 'image' | 'note' | 'spreadsheet' | 'code' | 'word' | 'gdoc' | 'archive';
 
 export interface DocumentItem {
   id: string;
@@ -6,7 +6,8 @@ export interface DocumentItem {
   name: string;
   type: FileType;
   sizeBytes: number;
-  content?: string; // Text content for notes or base64/placeholder for files
+  content?: string; // Text content or Google Doc URL
+  fileDataUrl?: string; // Base64 data URL for real uploaded files (PDFs, Word, Images)
   previewUrl?: string;
   tags: string[];
   isFavorite: boolean;
