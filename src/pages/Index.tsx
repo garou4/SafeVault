@@ -21,7 +21,7 @@ import { CreateDocumentDialog } from "@/components/CreateDocumentDialog";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { SettingsView } from "@/components/SettingsView";
 import { showSuccess } from "@/utils/toast";
-import { Lock, FolderOpen, ArrowLeft, ShieldAlert } from "lucide-react";
+import { Lock, FolderOpen, ArrowLeft, ShieldAlert, FolderPlus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const MAX_STORAGE_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
@@ -390,12 +390,26 @@ const Index: React.FC = () => {
               )}
 
               {/* Folders Section */}
-              {filteredFolders.length > 0 && (
+              {!selectedFolderId && currentNav !== "recents" && (
                 <div className="space-y-3">
                   <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                    Folders & Vaults ({filteredFolders.length})
+                    Folders & Vaults
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {/* Create Folder Box */}
+                    <button
+                      onClick={() => setIsCreateFolderOpen(true)}
+                      className="group bg-slate-100/50 dark:bg-slate-900/30 border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 rounded-2xl p-4 transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 min-h-[140px]"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <FolderPlus className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-sm text-slate-700 dark:text-slate-200">Create New Vault</div>
+                        <p className="text-[10px] text-slate-500">Add a password-protected folder</p>
+                      </div>
+                    </button>
+
                     {filteredFolders.map((f) => (
                       <FolderCard
                         key={f.id}
