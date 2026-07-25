@@ -19,8 +19,9 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ onSignIn, onSignUp, ha
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || password.length <= 6) {
-      showError("Username is required and password must be more than 6 characters.");
+    // Updated validation to > 5 characters
+    if (!username.trim() || password.length <= 5) {
+      showError("Username is required and password must be more than 5 characters.");
       return;
     }
 
@@ -81,7 +82,7 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ onSignIn, onSignUp, ha
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                 <Input
                   type="password"
-                  placeholder="More than 6 digits"
+                  placeholder="More than 5 digits"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-slate-950 border-slate-800 text-white pl-10 focus:ring-emerald-500"
@@ -90,9 +91,9 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ onSignIn, onSignUp, ha
               </div>
               {!isLogin && (
                 <div className="flex items-center gap-1.5 mt-2 ml-1">
-                  <div className={`h-1 flex-1 rounded-full ${password.length > 6 ? 'bg-emerald-500' : 'bg-slate-700'}`} />
-                  <span className={`text-[10px] font-bold ${password.length > 6 ? 'text-emerald-500' : 'text-slate-500'}`}>
-                    {password.length > 6 ? 'Strong Enough' : 'Min 7 chars'}
+                  <div className={`h-1 flex-1 rounded-full ${password.length > 5 ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+                  <span className={`text-[10px] font-bold ${password.length > 5 ? 'text-emerald-500' : 'text-slate-500'}`}>
+                    {password.length > 5 ? 'Strong Enough' : 'Min 6 chars'}
                   </span>
                 </div>
               )}

@@ -37,8 +37,9 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({
     e.preventDefault();
     setError("");
 
-    if (newPass.length <= 6) {
-      setError("New password must be more than 6 digits.");
+    // Updated validation to > 5 characters
+    if (newPass.length <= 5) {
+      setError("New password must be more than 5 digits.");
       return;
     }
 
@@ -115,7 +116,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   value={newPass}
                   onChange={(e) => setNewPass(e.target.value)}
                   className="bg-slate-950 border-slate-800 h-9 text-xs"
-                  placeholder="Min 7 chars"
+                  placeholder="Min 6 chars"
                   required
                 />
               </div>
