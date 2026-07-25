@@ -5,12 +5,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck, Lock, RefreshCw, KeyRound, AlertCircle } from "lucide-react";
+import { ShieldCheck, RefreshCw, KeyRound, AlertCircle } from "lucide-react";
 import { showError, showSuccess } from "@/utils/toast";
 
 interface SettingsDialogProps {
@@ -37,9 +36,12 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({
     e.preventDefault();
     setError("");
 
-    // Updated validation to > 5 characters
-    if (newPass.length <= 5) {
-      setError("New password must be more than 5 digits.");
+    const hasMinLength = newPass.length > 5;
+    const hasCapital = /[A-Z]/.test(newPass);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(newPass);
+
+    if (!hasMinLength || !hasCapital || !hasSpecial) {
+      setError("New password must be 6+ chars, 1 capital, and 1 special symbol.");
       return;
     }
 
@@ -116,7 +118,7 @@ export const SettingsDialog: React.FC<SettingsDialogProps> = ({
                   value={newPass}
                   onChange={(e) => setNewPass(e.target.value)}
                   className="bg-slate-950 border-slate-800 h-9 text-xs"
-                  placeholder="Min 6 chars"
+                  placeholder="Min 6, cap, sym"
                   required
                 />
               </div>

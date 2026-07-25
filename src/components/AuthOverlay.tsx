@@ -17,31 +17,52 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ onSignIn, onSignUp, ha
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const validatePassword = (pass: string) => {
+    const hasMinLength = pass.length > 5;
+    const hasCapital = /[A-Z]/.test(pass);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+    return { hasMinLength, hasCapital, hasSpecial };
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Updated validation to > 5 characters
-    if (!username.trim() || password.length <= 5) {
-      showError("Username is required and password must be more than 5 characters.");
+    
+    if (isLogin) {
+      setIsLoading(true);
+      setTimeout(() => {
+        const success = onSignIn(username, password);
+        if (!success) showError("Invalid username or password.");
+        else showSuccess(`Welcome back, ${username}!`);
+        setIsLoading(false);
+      }, 800);
+      return;
+    }
+
+    // Sign up validation
+    const { hasMinLength, hasCapital, hasSpecial } = validatePassword(password);
+    
+    if (!username.trim()) {
+      showError("Username is required.");
+      return;
+    }
+
+    if (!hasMinLength || !hasCapital || !hasSpecial) {
+      showError("Password must be 6+ chars with 1 capital and 1 special character.");
       return;
     }
 
     setIsLoading(true);
     setTimeout(() => {
-      if (isLogin) {
-        const success = onSignIn(username, password);
-        if (!success) showError("Invalid username or password.");
-        else showSuccess(`Welcome back, ${username}!`);
-      } else {
-        onSignUp(username, password);
-        showSuccess("Account created successfully!");
-      }
+      onSignUp(username, password);
+      showSuccess("Account created successfully!");
       setIsLoading(false);
     }, 800);
   };
 
+  const { hasMinLength, hasCapital, hasSpecial } = validatePassword(password);
+
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950 px-4 overflow-hidden">
-      {/* Background decoration */}
       <div className="absolute top-0 left-0 w-full h-full opacity-20 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-emerald-500 blur-[120px]" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600 blur-[120px]" />
@@ -82,7 +103,7 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ onSignIn, onSignUp, ha
                 <Lock className="absolute left-3 top-3 w-4 h-4 text-slate-500" />
                 <Input
                   type="password"
-                  placeholder="More than 5 digits"
+                  placeholder={isLogin ? "Enter password" : "Min 6 chars, 1 Capital, 1 Special"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-slate-950 border-slate-800 text-white pl-10 focus:ring-emerald-500"
@@ -90,11 +111,17 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ onSignIn, onSignUp, ha
                 />
               </div>
               {!isLogin && (
-                <div className="flex items-center gap-1.5 mt-2 ml-1">
-                  <div className={`h-1 flex-1 rounded-full ${password.length > 5 ? 'bg-emerald-500' : 'bg-slate-700'}`} />
-                  <span className={`text-[10px] font-bold ${password.length > 5 ? 'text-emerald-500' : 'text-slate-500'}`}>
-                    {password.length > 5 ? 'Strong Enough' : 'Min 6 chars'}
-                  </span>
+                <div className="space-y-2 mt-2 ml-1">
+                  <div className="flex gap-1">
+                    <div className={`h-1 flex-1 rounded-full ${hasMinLength ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+                    <div className={`h-1 flex-1 rounded-full ${hasCapital ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+                    <div className={`h-1 flex-1 rounded-full ${hasSpecial ? 'bg-emerald-500' : 'bg-slate-700'}`} />
+                  </div>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1 text-[10px] font-bold">
+                    <span className={hasMinLength ? 'text-emerald-500' : 'text-slate-500'}>• 6+ Characters</span>
+                    <span className={hasCapital ? 'text-emerald-500' : 'text-slate-500'}>• 1 Capital</span>
+                    <span className={hasSpecial ? 'text-emerald-500' : 'text-slate-500'}>• 1 Special Symbol</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -117,15 +144,6 @@ export const AuthOverlay: React.FC<AuthOverlayProps> = ({ onSignIn, onSignUp, ha
               {isLogin ? "Don't have an account? Create one" : "Already have an account? Sign in"}
             </button>
           </div>
-        </div>
-
-        <div className="mt-8 flex items-center justify-center gap-6 text-slate-500">
-           <div className="flex items-center gap-2 text-[11px] font-medium">
-             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> AES-256 Local Encryption
-           </div>
-           <div className="flex items-center gap-2 text-[11px] font-medium">
-             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /> Zero Knowledge
-           </div>
         </div>
       </div>
     </div>
