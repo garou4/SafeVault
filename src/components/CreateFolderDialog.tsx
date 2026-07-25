@@ -38,16 +38,6 @@ const PRESET_COLORS = [
   "#4b5563", // slate
 ];
 
-const PRESET_FOLDER_NAMES = [
-  "Tax & Financials 2025",
-  "Passports & Identity",
-  "Medical & Insurance",
-  "Property & Legal Documents",
-  "Passwords & Crypto Keys",
-  "Work Projects & NDAs",
-  "Family Archives",
-];
-
 export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
   isOpen,
   onClose,
@@ -64,7 +54,7 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      setError("Please select or enter a folder name");
+      setError("Please enter a folder name");
       return;
     }
 
@@ -106,7 +96,7 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
             <DialogTitle className="text-xl font-bold">New Vault Folder</DialogTitle>
           </div>
           <DialogDescription>
-            Choose or type a custom folder name and set up password protection.
+            Type a custom folder name and set up password protection for your new vault.
           </DialogDescription>
         </DialogHeader>
 
@@ -117,33 +107,13 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
             </div>
           )}
 
-          {/* Quick Select Folder Name */}
           <div className="space-y-2">
             <Label htmlFor="folder-name" className="text-xs font-semibold flex items-center gap-1">
               <Tag className="w-3.5 h-3.5 text-emerald-600" /> Folder Name *
             </Label>
-
-            {/* Presets */}
-            <div className="flex flex-wrap gap-1.5 pb-1">
-              {PRESET_FOLDER_NAMES.map((preset) => (
-                <button
-                  key={preset}
-                  type="button"
-                  onClick={() => { setName(preset); setError(""); }}
-                  className={`text-[11px] px-2.5 py-1 rounded-full border transition-all ${
-                    name === preset
-                      ? "bg-emerald-600 text-white border-emerald-600 font-medium"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-500"
-                  }`}
-                >
-                  {preset}
-                </button>
-              ))}
-            </div>
-
             <Input
               id="folder-name"
-              placeholder="Or type a custom folder name..."
+              placeholder="e.g. My Secure Vault"
               value={name}
               onChange={(e) => { setName(e.target.value); setError(""); }}
               autoFocus
