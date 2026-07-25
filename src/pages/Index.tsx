@@ -9,19 +9,19 @@ import {
   saveDocuments,
   loadSettings,
   saveSettings,
-  INITIAL_FOLDERS,
-  INITIAL_DOCUMENTS,
 } from "@/utils/vaultStorage";
 import { VaultSidebar, NavView } from "@/components/VaultSidebar";
 import { VaultHeader } from "@/components/VaultHeader";
 import { DocumentCard } from "@/components/DocumentCard";
+import { FolderCard } from "@/components/FolderCard";
 import { CreateFolderDialog } from "@/components/CreateFolderDialog";
 import { CreateDocumentDialog } from "@/components/CreateDocumentDialog";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
+import { PasswordModal } from "@/components/PasswordModal";
 import { AuthOverlay } from "@/components/AuthOverlay";
 import { useAuth } from "@/hooks/use-auth";
-import { showSuccess } from "@/utils/toast";
-import { FolderOpen, ShieldAlert, FolderPlus, Plus, ShieldCheck } from "lucide-react";
+import { showSuccess, showError } from "@/utils/toast";
+import { FolderOpen, ShieldAlert, FolderPlus, Plus, ShieldCheck, Folder as FolderIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const MAX_STORAGE_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
@@ -29,9 +29,9 @@ const MAX_STORAGE_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
 const Index: React.FC = () => {
   const auth = useAuth();
   
-  const [folders, setFolders] = useState<FolderItem[]>(loadFolders);
-  const [documents, setDocuments] = useState<DocumentItem[]>(loadDocuments);
-  const [settings, setSettings] = useState<VaultSettings>(loadSettings);
+  const [folders, setFolders] = useState<FolderItem[]>(() => loadFolders());
+  const [documents, setDocuments] = useState<DocumentItem[]>(() => loadDocuments());
+  const [settings, setSettings] = useState<VaultSettings>(() => loadSettings());
 
   const [currentNav, setCurrentNav] = useState<NavView>("all");
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
@@ -43,6 +43,7 @@ const Index: React.FC = () => {
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isCreateDocumentOpen, setIsCreateDocumentOpen] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<DocumentItem | null>(null);
+  const [passwordFolder, setPasswordFolder] = useState<FolderItem | null>(null);
 
   // Sync to persistence
   useEffect(() => {
@@ -58,12 +59,47 @@ const Index: React.FC = () => {
   }, [settings]);
 
   const handleSelectNav = (view: NavView, folderId?: string | null) => {
+    if (folderId) {
+      const folder = folders.find(f => f.id === folderId);
+      if (folder?.isPasswordProtected && !folder.isUnlocked) {
+        setPasswordFolder(folder);
+        return;
+      }
+    }
+    
     setCurrentNav(view);
     if (folderId !== undefined) {
       setSelectedFolderId(folderId);
     } else {
       setSelectedFolderId(null);
     }
+  };
+
+  const handleUnlockFolder = (folderId: string) => {
+    setFolders(prev => prev.map(f => f.id === folderId ? { ...f, isUnlocked: true } : f));
+    setCurrentNav("all");
+    setSelectedFolderId(folderId);
+  };
+
+  const handleToggleFavoriteFolder = (folderId: string) => {
+    setFolders(prev => prev.map(f => f.id === folderId ? { ...f, isFavorite: !f.isFavorite } : f));
+  };
+
+  const handleLockFolder = (folderId: string) => {
+    setFolders(prev => prev.map(f => f.id === folderId ? { ...f, isUnlocked: false } : f));
+    if (selectedFolderId === folderId) {
+      setSelectedFolderId(null);
+    }
+    showSuccess("Vault folder locked");
+  };
+
+  const handleDeleteFolder = (folderId: string) => {
+    setFolders(prev => prev.filter(f => f.id !== folderId));
+    setDocuments(prev => prev.filter(d => d.folderId !== folderId));
+    if (selectedFolderId === folderId) {
+      setSelectedFolderId(null);
+    }
+    showSuccess("Folder and its contents deleted");
   };
 
   const toggleDocumentFavorite = (docId: string) => {
@@ -136,12 +172,28 @@ const Index: React.FC = () => {
     return folders.find((f) => f.id === selectedFolderId) || null;
   }, [folders, selectedFolderId]);
 
+  const filteredFolders = useMemo(() => {
+    if (selectedFolderId || currentNav !== "all") return [];
+    if (!searchQuery.trim()) return folders;
+    
+    const q = searchQuery.toLowerCase();
+    return folders.filter(f => 
+      f.name.toLowerCase().includes(q) || 
+      f.description?.toLowerCase().includes(q)
+    );
+  }, [folders, selectedFolderId, currentNav, searchQuery]);
+
   const filteredDocuments = useMemo(() => {
     return documents.filter((d) => {
       if (selectedFolderId !== null) {
         if (d.folderId !== selectedFolderId) return false;
       } else if (currentNav === "favorites") {
         if (!d.isFavorite) return false;
+      } else if (currentNav === "recents") {
+        // Just show all for recents sorted by date
+      } else {
+        // In "All" view with no folder selected, only show root documents
+        if (d.folderId !== null) return false;
       }
 
       if (selectedTypeFilter !== "all" && d.type !== selectedTypeFilter) {
@@ -165,7 +217,6 @@ const Index: React.FC = () => {
     });
   }, [documents, selectedFolderId, currentNav, selectedTypeFilter, searchQuery]);
 
-  // If not authenticated, show the login/signup screen
   if (!auth.isAuthenticated) {
     return (
       <AuthOverlay 
@@ -214,7 +265,8 @@ const Index: React.FC = () => {
 
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="space-y-12">
-            {!selectedFolderId && currentNav === "all" && (
+            {/* Banner for Empty State */}
+            {!selectedFolderId && currentNav === "all" && folders.length === 0 && (
               <section className="relative">
                 <button
                   onClick={() => setIsCreateFolderOpen(true)}
@@ -246,6 +298,7 @@ const Index: React.FC = () => {
               </section>
             )}
 
+            {/* Breadcrumbs */}
             {(selectedFolderId || currentNav !== "all") && (
               <div className="flex items-center gap-2 text-xs text-slate-500 pb-2 border-b">
                 <button
@@ -262,8 +315,40 @@ const Index: React.FC = () => {
               </div>
             )}
 
+            {/* Folders Section */}
+            {filteredFolders.length > 0 && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                    <FolderIcon className="w-4 h-4" /> Vault Folders
+                  </h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
+                  {filteredFolders.map((folder) => (
+                    <FolderCard
+                      key={folder.id}
+                      folder={folder}
+                      itemCount={documents.filter(d => d.folderId === folder.id).length}
+                      onOpenFolder={(f) => handleSelectNav("all", f.id)}
+                      onEditFolder={(f) => {}} // Could add edit dialog later
+                      onToggleFavorite={handleToggleFavoriteFolder}
+                      onLockFolder={handleLockFolder}
+                      onDeleteFolder={handleDeleteFolder}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Documents Section */}
             <div className="space-y-4">
-              {filteredDocuments.length === 0 ? (
+              {!selectedFolderId && currentNav === "all" && folders.length > 0 && (
+                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <ShieldCheck className="w-4 h-4" /> Root Documents
+                </h3>
+              )}
+              
+              {filteredDocuments.length === 0 && filteredFolders.length === 0 ? (
                 <div className="text-center py-16 bg-slate-100/50 dark:bg-slate-900/30 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
                   <ShieldAlert className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
                   <p className="text-base font-bold text-slate-700 dark:text-slate-200">
@@ -313,6 +398,13 @@ const Index: React.FC = () => {
         document={previewDocument}
         isOpen={!!previewDocument}
         onClose={() => setPreviewDocument(null)}
+      />
+
+      <PasswordModal
+        folder={passwordFolder}
+        isOpen={!!passwordFolder}
+        onClose={() => setPasswordFolder(null)}
+        onSuccess={handleUnlockFolder}
       />
     </div>
   );
