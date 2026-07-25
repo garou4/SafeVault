@@ -21,7 +21,7 @@ import { CreateDocumentDialog } from "@/components/CreateDocumentDialog";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { SettingsView } from "@/components/SettingsView";
 import { showSuccess } from "@/utils/toast";
-import { Lock, FolderOpen, ArrowLeft, ShieldAlert, FolderPlus } from "lucide-react";
+import { Lock, FolderOpen, ArrowLeft, ShieldAlert, FolderPlus, Plus, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const MAX_STORAGE_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
@@ -371,7 +371,46 @@ const Index: React.FC = () => {
               </div>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-12">
+              {/* Standalone Create Folder Hero Section */}
+              {!selectedFolderId && currentNav === "all" && (
+                <section className="relative">
+                  <button
+                    onClick={() => setIsCreateFolderOpen(true)}
+                    className="w-full group relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 dark:from-emerald-950 dark:to-slate-900 border border-slate-700 dark:border-emerald-900/50 rounded-3xl p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-900/20 text-left flex items-center justify-between group"
+                  >
+                    <div className="relative z-10 space-y-2">
+                      <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase border border-emerald-500/20">
+                        <ShieldCheck className="w-3 h-3" /> Secure Vault Storage
+                      </div>
+                      <h2 className="text-3xl font-extrabold text-white tracking-tight">
+                        Create Your First Secure Vault
+                      </h2>
+                      <p className="text-slate-400 max-w-md text-sm leading-relaxed">
+                        Start organizing your confidential documents with end-to-end local encryption. 
+                        Choose a name, pick an accent color, and set a master password.
+                      </p>
+                      <div className="pt-4 flex items-center gap-3">
+                         <div className="bg-emerald-600 group-hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center gap-2 shadow-lg shadow-emerald-900/40">
+                           <FolderPlus className="w-4 h-4" /> Get Started Now
+                         </div>
+                         <span className="text-slate-500 text-xs font-medium italic">Takes less than 10 seconds</span>
+                      </div>
+                    </div>
+                    
+                    <div className="relative z-10 hidden md:block pr-8">
+                       <div className="w-24 h-24 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                          <Plus className="w-12 h-12" />
+                       </div>
+                    </div>
+
+                    {/* Decorative Background Elements */}
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[80px] -mr-32 -mt-32" />
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 blur-[60px] -ml-24 -mb-24" />
+                  </button>
+                </section>
+              )}
+
               {/* Breadcrumb Navigation */}
               {selectedFolderId && (
                 <div className="flex items-center gap-2 text-xs text-slate-500 pb-2 border-b">
@@ -389,27 +428,15 @@ const Index: React.FC = () => {
                 </div>
               )}
 
-              {/* Folders Section */}
-              {!selectedFolderId && currentNav !== "recents" && (
-                <div className="space-y-3">
-                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                    Folders & Vaults
-                  </h3>
+              {/* Existing Folders Section */}
+              {!selectedFolderId && currentNav !== "recents" && filteredFolders.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+                      Your Active Vaults
+                    </h3>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {/* Create Folder Box */}
-                    <button
-                      onClick={() => setIsCreateFolderOpen(true)}
-                      className="group bg-slate-100/50 dark:bg-slate-900/30 border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-emerald-500/50 rounded-2xl p-4 transition-all duration-200 flex flex-col items-center justify-center text-center gap-2 min-h-[140px]"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                        <FolderPlus className="w-5 h-5" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-sm text-slate-700 dark:text-slate-200">Create New Vault</div>
-                        <p className="text-[10px] text-slate-500">Add a password-protected folder</p>
-                      </div>
-                    </button>
-
                     {filteredFolders.map((f) => (
                       <FolderCard
                         key={f.id}
@@ -432,52 +459,52 @@ const Index: React.FC = () => {
               )}
 
               {/* Documents Section */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-wider">
-                    Documents ({filteredDocuments.length})
-                  </h3>
-                </div>
+              {(selectedFolderId || filteredDocuments.length > 0) && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between px-1">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
+                      {selectedFolderId ? "Vault Contents" : "Recent Documents"} ({filteredDocuments.length})
+                    </h3>
+                  </div>
 
-                {filteredDocuments.length === 0 ? (
-                  <div className="text-center py-12 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-2xl">
-                    <ShieldAlert className="w-10 h-10 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
-                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                      No documents found
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Upload or add a secure note to populate this folder.
-                    </p>
-                    <Button
-                      onClick={() => setIsCreateDocumentOpen(true)}
-                      variant="outline"
-                      size="sm"
-                      className="mt-4 text-xs"
+                  {filteredDocuments.length === 0 ? (
+                    <div className="text-center py-16 bg-slate-100/50 dark:bg-slate-900/30 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+                      <ShieldAlert className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
+                      <p className="text-base font-bold text-slate-700 dark:text-slate-200">
+                        This vault is currently empty
+                      </p>
+                      <p className="text-sm text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
+                        Securely upload your first document or start typing a private note to populate this area.
+                      </p>
+                      <Button
+                        onClick={() => setIsCreateDocumentOpen(true)}
+                        className="mt-6 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-900/20"
+                      >
+                        <Plus className="w-4 h-4 mr-2" /> Add Your First Item
+                      </Button>
+                    </div>
+                  ) : (
+                    <div
+                      className={
+                        viewMode === "grid"
+                          ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
+                          : "space-y-3"
+                      }
                     >
-                      Add First Document
-                    </Button>
-                  </div>
-                ) : (
-                  <div
-                    className={
-                      viewMode === "grid"
-                        ? "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4"
-                        : "space-y-2"
-                    }
-                  >
-                    {filteredDocuments.map((doc) => (
-                      <DocumentCard
-                        key={doc.id}
-                        document={doc}
-                        viewMode={viewMode}
-                        onPreview={handlePreviewDocument}
-                        onToggleFavorite={toggleDocumentFavorite}
-                        onDeleteDocument={handleDeleteDocument}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+                      {filteredDocuments.map((doc) => (
+                        <DocumentCard
+                          key={doc.id}
+                          document={doc}
+                          viewMode={viewMode}
+                          onPreview={handlePreviewDocument}
+                          onToggleFavorite={toggleDocumentFavorite}
+                          onDeleteDocument={handleDeleteDocument}
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </main>
