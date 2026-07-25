@@ -21,7 +21,7 @@ import { CreateDocumentDialog } from "@/components/CreateDocumentDialog";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { SettingsView } from "@/components/SettingsView";
 import { showSuccess } from "@/utils/toast";
-import { Lock, FolderOpen, ArrowLeft, ShieldAlert, FolderPlus, Plus } from "lucide-react";
+import { Lock, FolderOpen, ArrowLeft, ShieldAlert, FolderPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const MAX_STORAGE_BYTES = 5 * 1024 * 1024 * 1024; // 5 GB
