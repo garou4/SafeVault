@@ -12,7 +12,8 @@ interface AuthOverlayProps {
 }
 
 export const AuthOverlay: React.FC<AuthOverlayProps> = ({ onSignIn, onSignUp, hasAccount }) => {
-  const [isLogin, setIsLogin] = useState(hasAccount);
+  // Changed: Default to false so every user starts at the "Create Account" screen
+  const [isLogin, setIsLogin] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
