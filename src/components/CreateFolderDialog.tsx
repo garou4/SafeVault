@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Lock, ShieldAlert, FolderPlus, Palette, Tag } from "lucide-react";
+import { Lock, FolderPlus, Palette, Tag } from "lucide-react";
 import { showSuccess } from "@/utils/toast";
 
 interface CreateFolderDialogProps {
@@ -226,11 +226,6 @@ export const CreateFolderDialog: React.FC<CreateFolderDialogProps> = ({
                     onChange={(e) => setPasswordHint(e.target.value)}
                     className="bg-white dark:bg-slate-950 text-xs"
                   />
-                </div>
-
-                <div className="flex items-center gap-1.5 text-[11px] text-amber-600 dark:text-amber-400">
-                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" />
-                  <span>Master Password also works to unlock this folder.</span>
                 </div>
               </div>
             )}

@@ -15,7 +15,6 @@ import { VaultHeader } from "@/components/VaultHeader";
 import { FolderCard } from "@/components/FolderCard";
 import { DocumentCard } from "@/components/DocumentCard";
 import { PasswordModal } from "@/components/PasswordModal";
-import { SetMasterPasswordDialog } from "@/components/SetMasterPasswordDialog";
 import { CreateFolderDialog } from "@/components/CreateFolderDialog";
 import { EditFolderDialog } from "@/components/EditFolderDialog";
 import { CreateDocumentDialog } from "@/components/CreateDocumentDialog";
@@ -42,7 +41,6 @@ const Index: React.FC = () => {
   // Modals state
   const [passwordFolder, setPasswordFolder] = useState<FolderItem | null>(null);
   const [editingFolder, setEditingFolder] = useState<FolderItem | null>(null);
-  const [isSetMasterPassOpen, setIsSetMasterPassOpen] = useState(false);
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [isCreateDocumentOpen, setIsCreateDocumentOpen] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<DocumentItem | null>(null);
@@ -107,15 +105,6 @@ const Index: React.FC = () => {
     );
     setSelectedFolderId(folderId);
     setCurrentNav("vaults");
-  };
-
-  // Save new Master Password
-  const handleSaveMasterPassword = (newPassword: string, hint: string) => {
-    setSettings((prev) => ({
-      ...prev,
-      masterPassword: newPassword,
-      masterPasswordHint: hint,
-    }));
   };
 
   // Toggle favorite for folders
@@ -248,7 +237,7 @@ const Index: React.FC = () => {
     setDocuments(INITIAL_DOCUMENTS);
     setSelectedFolderId(null);
     setCurrentNav("all");
-    showSuccess("Reset vault data to demo defaults");
+    showSuccess("Vault reset successfully");
   };
 
   // Calculate statistics
@@ -336,7 +325,6 @@ const Index: React.FC = () => {
           onViewModeChange={setViewMode}
           onOpenCreateDocument={() => setIsCreateDocumentOpen(true)}
           onOpenCreateFolder={() => setIsCreateFolderOpen(true)}
-          onOpenSetMasterPassword={() => setIsSetMasterPassOpen(true)}
           currentFolderTitle={
             currentFolder
               ? currentFolder.name
@@ -357,7 +345,6 @@ const Index: React.FC = () => {
               settings={settings}
               folders={folders}
               onUpdateSettings={setSettings}
-              onOpenSetMasterPassword={() => setIsSetMasterPassOpen(true)}
               onLockAll={lockAllFolders}
               onResetAllData={handleResetAllData}
             />
@@ -369,7 +356,7 @@ const Index: React.FC = () => {
               </div>
               <h3 className="text-xl font-bold">This Vault is Locked</h3>
               <p className="text-sm text-slate-500">
-                Enter the folder password or Master Password to access "{currentFolder.name}".
+                Enter the folder password to access "{currentFolder.name}".
               </p>
               <div className="pt-2 flex justify-center gap-3">
                 <Button variant="outline" onClick={() => setSelectedFolderId(null)}>
@@ -485,18 +472,9 @@ const Index: React.FC = () => {
       {/* Modals */}
       <PasswordModal
         folder={passwordFolder}
-        masterPassword={settings.masterPassword}
         isOpen={!!passwordFolder}
         onClose={() => setPasswordFolder(null)}
         onSuccess={handleUnlockFolderSuccess}
-      />
-
-      <SetMasterPasswordDialog
-        isOpen={isSetMasterPassOpen}
-        currentMasterPassword={settings.masterPassword}
-        currentHint={settings.masterPasswordHint}
-        onClose={() => setIsSetMasterPassOpen(false)}
-        onSaveMasterPassword={handleSaveMasterPassword}
       />
 
       <CreateFolderDialog

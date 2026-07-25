@@ -38,8 +38,6 @@ export interface StorageStats {
 }
 
 export interface VaultSettings {
-  masterPassword?: string;
-  masterPasswordHint?: string;
   autoLockMinutes: number;
   lockOnTabBlur: boolean;
   enableEncryptionBadge: boolean;

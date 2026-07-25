@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, LayoutGrid, List, Plus, FolderPlus, ShieldCheck, KeyRound } from "lucide-react";
+import { Search, LayoutGrid, List, Plus, FolderPlus, ShieldCheck } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,7 +19,6 @@ interface VaultHeaderProps {
   onViewModeChange: (mode: "grid" | "list") => void;
   onOpenCreateDocument: () => void;
   onOpenCreateFolder: () => void;
-  onOpenSetMasterPassword: () => void;
   currentFolderTitle?: string;
   isCurrentFolderLocked?: boolean;
 }
@@ -33,7 +32,6 @@ export const VaultHeader: React.FC<VaultHeaderProps> = ({
   onViewModeChange,
   onOpenCreateDocument,
   onOpenCreateFolder,
-  onOpenSetMasterPassword,
   currentFolderTitle,
   isCurrentFolderLocked,
 }) => {
@@ -108,17 +106,6 @@ export const VaultHeader: React.FC<VaultHeaderProps> = ({
 
         {/* Actions */}
         <div className="flex items-center gap-2">
-          <Button
-            onClick={onOpenSetMasterPassword}
-            variant="outline"
-            size="sm"
-            className="h-9 text-xs gap-1.5 border-emerald-300 text-emerald-700 dark:text-emerald-400 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 hover:bg-emerald-100"
-            title="Set universal master password"
-          >
-            <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
-            Set Master Key
-          </Button>
-
           <Button
             onClick={onOpenCreateFolder}
             variant="outline"
