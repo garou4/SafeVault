@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, LayoutGrid, List, Plus, FolderPlus, ShieldCheck } from "lucide-react";
+import { Search, LayoutGrid, List, Plus, FolderPlus, ShieldCheck, Code2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface VaultHeaderProps {
   searchQuery: string;
@@ -21,6 +22,7 @@ interface VaultHeaderProps {
   onOpenCreateFolder: () => void;
   currentFolderTitle?: string;
   isCurrentFolderLocked?: boolean;
+  isDeveloper?: boolean;
 }
 
 export const VaultHeader: React.FC<VaultHeaderProps> = ({
@@ -34,24 +36,39 @@ export const VaultHeader: React.FC<VaultHeaderProps> = ({
   onOpenCreateFolder,
   currentFolderTitle,
   isCurrentFolderLocked,
+  isDeveloper,
 }) => {
   return (
     <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 sticky top-0 z-10 flex flex-col md:flex-row items-center justify-between gap-4">
       {/* Title & Status */}
       <div className="flex items-center gap-3 w-full md:w-auto">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-            {currentFolderTitle || "Dashboard"}
-            {isCurrentFolderLocked === false && (
-              <span className="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-semibold px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
-                Unlocked
-              </span>
-            )}
-          </h2>
-          <p className="text-xs text-slate-500 flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-            End-to-end Local Encryption Vault
-          </p>
+        <div className="flex items-center gap-2">
+          {isDeveloper && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="p-1.5 bg-indigo-500/10 text-indigo-500 rounded-lg border border-indigo-500/20">
+                  <Code2 className="w-5 h-5" />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p className="text-[10px] font-bold">Developer Mode Active</p>
+              </TooltipContent>
+            </Tooltip>
+          )}
+          <div>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              {currentFolderTitle || "Dashboard"}
+              {isCurrentFolderLocked === false && (
+                <span className="text-xs bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-semibold px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-800">
+                  Unlocked
+                </span>
+              )}
+            </h2>
+            <p className="text-xs text-slate-500 flex items-center gap-1">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              {isDeveloper ? "Sarvagya's Development Terminal" : "End-to-end Local Encryption Vault"}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -82,7 +99,6 @@ export const VaultHeader: React.FC<VaultHeaderProps> = ({
           </SelectContent>
         </Select>
 
-        {/* View Mode Switcher */}
         <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
           <button
             onClick={() => onViewModeChange("grid")}
@@ -104,7 +120,6 @@ export const VaultHeader: React.FC<VaultHeaderProps> = ({
           </button>
         </div>
 
-        {/* Actions */}
         <div className="flex items-center gap-2">
           <Button
             onClick={onOpenCreateFolder}

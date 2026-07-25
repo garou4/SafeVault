@@ -4,6 +4,9 @@ import { UserAccount, AuthState } from "@/types/auth";
 const USER_STORAGE_KEY = "safevault_user_account";
 const AUTH_SESSION_KEY = "safevault_auth_session";
 
+const DEV_USERNAME = "Sarvagya";
+const DEV_PASSWORD = "Boomengboxlol@2";
+
 export function useAuth() {
   const [authState, setAuthState] = useState<AuthState>({
     user: null,
@@ -22,11 +25,16 @@ export function useAuth() {
     }
   }, []);
 
+  const checkDevStatus = (username: string, password: string) => {
+    return username === DEV_USERNAME && password === DEV_PASSWORD;
+  };
+
   const signUp = (username: string, password: string) => {
     const newUser: UserAccount = {
       username,
-      passwordHash: password, // In a real app, this would be salted/hashed
+      passwordHash: password,
       createdAt: new Date().toISOString(),
+      isDeveloper: checkDevStatus(username, password),
     };
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser));
     localStorage.setItem(AUTH_SESSION_KEY, "true");
@@ -35,6 +43,22 @@ export function useAuth() {
 
   const signIn = (username: string, password: string): boolean => {
     const savedUserStr = localStorage.getItem(USER_STORAGE_KEY);
+    
+    // Allow login even if account doesn't exist yet for the developer credentials
+    // or if the saved user matches
+    if (checkDevStatus(username, password)) {
+      const devUser: UserAccount = {
+        username,
+        passwordHash: password,
+        createdAt: new Date().toISOString(),
+        isDeveloper: true,
+      };
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(devUser));
+      localStorage.setItem(AUTH_SESSION_KEY, "true");
+      setAuthState({ user: devUser, isAuthenticated: true });
+      return true;
+    }
+
     if (!savedUserStr) return false;
     
     const savedUser: UserAccount = JSON.parse(savedUserStr);
@@ -60,7 +84,11 @@ export function useAuth() {
       return { success: false, message: "Incorrect current password." };
     }
 
-    const updatedUser = { ...savedUser, passwordHash: newPass };
+    const updatedUser = { 
+      ...savedUser, 
+      passwordHash: newPass,
+      isDeveloper: checkDevStatus(savedUser.username, newPass)
+    };
     localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(updatedUser));
     setAuthState(prev => ({ ...prev, user: updatedUser }));
     return { success: true, message: "Password updated successfully!" };

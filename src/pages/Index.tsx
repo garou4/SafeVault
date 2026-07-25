@@ -200,6 +200,7 @@ const Index: React.FC = () => {
           onViewModeChange={setViewMode}
           onOpenCreateDocument={() => setIsCreateDocumentOpen(true)}
           onOpenCreateFolder={() => setIsCreateFolderOpen(true)}
+          isDeveloper={auth.user?.isDeveloper}
           currentFolderTitle={
             currentFolder
               ? currentFolder.name
