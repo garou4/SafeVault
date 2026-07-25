@@ -15,6 +15,7 @@ import { VaultHeader } from "@/components/VaultHeader";
 import { DocumentCard } from "@/components/DocumentCard";
 import { FolderCard } from "@/components/FolderCard";
 import { CreateFolderDialog } from "@/components/CreateFolderDialog";
+import { EditFolderDialog } from "@/components/EditFolderDialog";
 import { CreateDocumentDialog } from "@/components/CreateDocumentDialog";
 import { DocumentPreviewModal } from "@/components/DocumentPreviewModal";
 import { PasswordModal } from "@/components/PasswordModal";
@@ -41,6 +42,7 @@ const Index: React.FC = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+  const [editingFolder, setEditingFolder] = useState<FolderItem | null>(null);
   const [isCreateDocumentOpen, setIsCreateDocumentOpen] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<DocumentItem | null>(null);
   const [passwordFolder, setPasswordFolder] = useState<FolderItem | null>(null);
@@ -100,6 +102,27 @@ const Index: React.FC = () => {
       setSelectedFolderId(null);
     }
     showSuccess("Folder and its contents deleted");
+  };
+
+  const handleUpdateFolder = (data: {
+    id: string;
+    name: string;
+    description: string;
+    color: string;
+    isPasswordProtected: boolean;
+    password?: string;
+    passwordHint?: string;
+  }) => {
+    setFolders(prev => prev.map(f => f.id === data.id ? { 
+      ...f, 
+      name: data.name,
+      description: data.description,
+      color: data.color,
+      isPasswordProtected: data.isPasswordProtected,
+      password: data.password,
+      passwordHint: data.passwordHint,
+      isUnlocked: true // Keep unlocked after editing for better UX
+    } : f));
   };
 
   const toggleDocumentFavorite = (docId: string) => {
@@ -190,9 +213,8 @@ const Index: React.FC = () => {
       } else if (currentNav === "favorites") {
         if (!d.isFavorite) return false;
       } else if (currentNav === "recents") {
-        // Just show all for recents sorted by date
+        // Recents handled by sort
       } else {
-        // In "All" view with no folder selected, only show root documents
         if (d.folderId !== null) return false;
       }
 
@@ -204,8 +226,7 @@ const Index: React.FC = () => {
         const q = searchQuery.toLowerCase();
         const matchesName = d.name.toLowerCase().includes(q);
         const matchesTags = d.tags.some((t) => t.toLowerCase().includes(q));
-        const matchesContent = d.content && d.content.toLowerCase().includes(q);
-        return matchesName || matchesTags || matchesContent;
+        return matchesName || matchesTags;
       }
 
       return true;
@@ -264,13 +285,13 @@ const Index: React.FC = () => {
         />
 
         <main className="flex-1 p-6 overflow-y-auto">
-          <div className="space-y-12">
-            {/* Banner for Empty State */}
-            {!selectedFolderId && currentNav === "all" && folders.length === 0 && (
+          <div className="space-y-10">
+            {/* Empty State Banner */}
+            {!selectedFolderId && currentNav === "all" && folders.length === 0 && documents.filter(d => d.folderId === null).length === 0 && (
               <section className="relative">
                 <button
                   onClick={() => setIsCreateFolderOpen(true)}
-                  className="w-full group relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 dark:from-emerald-950 dark:to-slate-900 border border-slate-700 dark:border-emerald-900/50 rounded-3xl p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-900/20 text-left flex items-center justify-between group"
+                  className="w-full group relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 dark:from-emerald-950 dark:to-slate-900 border border-slate-700 dark:border-emerald-900/50 rounded-3xl p-8 transition-all duration-300 hover:shadow-2xl hover:shadow-emerald-900/20 text-left flex items-center justify-between"
                 >
                   <div className="relative z-10 space-y-2">
                     <div className="inline-flex items-center gap-2 bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-xs font-bold tracking-wide uppercase border border-emerald-500/20">
@@ -288,11 +309,6 @@ const Index: React.FC = () => {
                        </div>
                     </div>
                   </div>
-                  <div className="relative z-10 hidden md:block pr-8">
-                     <div className="w-24 h-24 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
-                        <Plus className="w-12 h-12" />
-                     </div>
-                  </div>
                   <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/5 blur-[80px] -mr-32 -mt-32" />
                 </button>
               </section>
@@ -300,7 +316,7 @@ const Index: React.FC = () => {
 
             {/* Breadcrumbs */}
             {(selectedFolderId || currentNav !== "all") && (
-              <div className="flex items-center gap-2 text-xs text-slate-500 pb-2 border-b">
+              <div className="flex items-center gap-2 text-xs text-slate-500 pb-2 border-b border-slate-200 dark:border-slate-800">
                 <button
                   onClick={() => { setSelectedFolderId(null); setCurrentNav("all"); }}
                   className="hover:text-emerald-600 font-medium"
@@ -318,11 +334,9 @@ const Index: React.FC = () => {
             {/* Folders Section */}
             {filteredFolders.length > 0 && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                    <FolderIcon className="w-4 h-4" /> Vault Folders
-                  </h3>
-                </div>
+                <h3 className="text-sm font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                  <FolderIcon className="w-4 h-4" /> Vault Folders
+                </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
                   {filteredFolders.map((folder) => (
                     <FolderCard
@@ -330,7 +344,7 @@ const Index: React.FC = () => {
                       folder={folder}
                       itemCount={documents.filter(d => d.folderId === folder.id).length}
                       onOpenFolder={(f) => handleSelectNav("all", f.id)}
-                      onEditFolder={(f) => {}} // Could add edit dialog later
+                      onEditFolder={(f) => setEditingFolder(f)}
                       onToggleFavorite={handleToggleFavoriteFolder}
                       onLockFolder={handleLockFolder}
                       onDeleteFolder={handleDeleteFolder}
@@ -349,16 +363,16 @@ const Index: React.FC = () => {
               )}
               
               {filteredDocuments.length === 0 && filteredFolders.length === 0 ? (
-                <div className="text-center py-16 bg-slate-100/50 dark:bg-slate-900/30 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
+                <div className="text-center py-16 bg-white dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
                   <ShieldAlert className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
                   <p className="text-base font-bold text-slate-700 dark:text-slate-200">
-                    This view is currently empty
+                    This vault area is empty
                   </p>
                   <Button
                     onClick={() => setIsCreateDocumentOpen(true)}
                     className="mt-6 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-emerald-900/20"
                   >
-                    <Plus className="w-4 h-4 mr-2" /> Add Your First Item
+                    <Plus className="w-4 h-4 mr-2" /> Add Document
                   </Button>
                 </div>
               ) : (
@@ -384,6 +398,13 @@ const Index: React.FC = () => {
         isOpen={isCreateFolderOpen}
         onClose={() => setIsCreateFolderOpen(false)}
         onCreateFolder={handleCreateFolder}
+      />
+
+      <EditFolderDialog
+        folder={editingFolder}
+        isOpen={!!editingFolder}
+        onClose={() => setEditingFolder(null)}
+        onUpdateFolder={handleUpdateFolder}
       />
 
       <CreateDocumentDialog
