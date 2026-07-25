@@ -1,8 +1,8 @@
 import { DocumentItem, FolderItem, VaultSettings } from "@/types/vault";
 
-const FOLDERS_KEY = "dyad_vault_folders_v1";
-const DOCUMENTS_KEY = "dyad_vault_documents_v1";
-const SETTINGS_KEY = "dyad_vault_settings_v1";
+const FOLDERS_KEY = "dyad_vault_folders_v2";
+const DOCUMENTS_KEY = "dyad_vault_documents_v2";
+const SETTINGS_KEY = "dyad_vault_settings_v2";
 
 // Ensure these are exported as empty arrays so no mock data appears on first load
 export const INITIAL_FOLDERS: FolderItem[] = [];
