@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect, useMemo } from "react";
 import { FolderItem, DocumentItem, VaultSettings, FileType } from "@/types/vault";
 import {
@@ -254,20 +256,6 @@ const Index: React.FC = () => {
   }, [folders, selectedFolderId]);
 
   // Filtered Items logic
-  const filteredFolders = useMemo(() => {
-    if (currentNav === "favorites") {
-      return folders.filter((f) => f.isFavorite);
-    }
-    if (selectedFolderId !== null) {
-      return []; // inside a specific folder view
-    }
-    return folders.filter((f) => {
-      const matchesSearch = f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (f.description && f.description.toLowerCase().includes(searchQuery.toLowerCase()));
-      return matchesSearch;
-    });
-  }, [folders, currentNav, selectedFolderId, searchQuery]);
-
   const filteredDocuments = useMemo(() => {
     return documents.filter((d) => {
       if (selectedFolderId !== null) {
@@ -372,7 +360,7 @@ const Index: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-12">
-              {/* Standalone Create Folder Hero Section */}
+              {/* Standalone Create Folder Hero Section - Only shown on main "all" view */}
               {!selectedFolderId && currentNav === "all" && (
                 <section className="relative">
                   <button
@@ -411,8 +399,8 @@ const Index: React.FC = () => {
                 </section>
               )}
 
-              {/* Breadcrumb Navigation */}
-              {selectedFolderId && (
+              {/* Breadcrumb Navigation - Only shown when inside a folder or specific nav */}
+              {(selectedFolderId || currentNav !== "all") && (
                 <div className="flex items-center gap-2 text-xs text-slate-500 pb-2 border-b">
                   <button
                     onClick={() => { setSelectedFolderId(null); setCurrentNav("all"); }}
@@ -423,47 +411,17 @@ const Index: React.FC = () => {
                   <span>/</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-200 flex items-center gap-1">
                     <FolderOpen className="w-3.5 h-3.5 text-emerald-600" />
-                    {currentFolder?.name}
+                    {selectedFolderId ? currentFolder?.name : currentNav === "favorites" ? "Starred" : "Recents"}
                   </span>
                 </div>
               )}
 
-              {/* Existing Folders Section */}
-              {!selectedFolderId && currentNav !== "recents" && filteredFolders.length > 0 && (
+              {/* Vault Content Section - Shown when inside a folder or specific nav view */}
+              {(selectedFolderId || currentNav !== "all") && (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between px-1">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                      Your Active Vaults
-                    </h3>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-                    {filteredFolders.map((f) => (
-                      <FolderCard
-                        key={f.id}
-                        folder={f}
-                        itemCount={documents.filter((d) => d.folderId === f.id).length}
-                        onOpenFolder={handleOpenFolder}
-                        onEditFolder={(folderToEdit) => setEditingFolder(folderToEdit)}
-                        onToggleFavorite={toggleFolderFavorite}
-                        onLockFolder={() => {
-                          setFolders((prev) =>
-                            prev.map((item) => (item.id === f.id ? { ...item, isUnlocked: false } : item))
-                          );
-                          showSuccess(`Locked "${f.name}"`);
-                        }}
-                        onDeleteFolder={handleDeleteFolder}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Documents Section */}
-              {(selectedFolderId || filteredDocuments.length > 0) && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between px-1">
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-[0.2em]">
-                      {selectedFolderId ? "Vault Contents" : "Recent Documents"} ({filteredDocuments.length})
+                      {selectedFolderId ? "Vault Contents" : "Items"} ({filteredDocuments.length})
                     </h3>
                   </div>
 
@@ -471,7 +429,7 @@ const Index: React.FC = () => {
                     <div className="text-center py-16 bg-slate-100/50 dark:bg-slate-900/30 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-3xl">
                       <ShieldAlert className="w-12 h-12 text-slate-300 dark:text-slate-700 mx-auto mb-4" />
                       <p className="text-base font-bold text-slate-700 dark:text-slate-200">
-                        This vault is currently empty
+                        This view is currently empty
                       </p>
                       <p className="text-sm text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
                         Securely upload your first document or start typing a private note to populate this area.
