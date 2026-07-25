@@ -4,8 +4,8 @@ const FOLDERS_KEY = "dyad_vault_folders_v1";
 const DOCUMENTS_KEY = "dyad_vault_documents_v1";
 const SETTINGS_KEY = "dyad_vault_settings_v1";
 
+// Ensure these are exported as empty arrays so no mock data appears on first load
 export const INITIAL_FOLDERS: FolderItem[] = [];
-
 export const INITIAL_DOCUMENTS: DocumentItem[] = [];
 
 export const INITIAL_SETTINGS: VaultSettings = {
