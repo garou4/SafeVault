@@ -1,13 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   ShieldCheck,
   Star,
   Clock,
   HardDrive,
   FileCheck2,
+  Settings,
 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { formatBytes } from "@/utils/vaultStorage";
+import { SettingsDialog } from "./SettingsDialog";
 
 export type NavView = "all" | "vaults" | "favorites" | "recents" | "settings";
 
@@ -17,6 +19,9 @@ interface VaultSidebarProps {
   totalBytesUsed: number;
   maxBytes: number;
   onSelectNav: (view: NavView, folderId?: string | null) => void;
+  username: string;
+  onUpdatePassword: (curr: string, next: string) => { success: boolean; message: string };
+  onSignOut: () => void;
 }
 
 export const VaultSidebar: React.FC<VaultSidebarProps> = ({
@@ -25,7 +30,11 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
   totalBytesUsed,
   maxBytes,
   onSelectNav,
+  username,
+  onUpdatePassword,
+  onSignOut,
 }) => {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const usedPercentage = Math.min(100, Math.round((totalBytesUsed / maxBytes) * 100));
 
   return (
@@ -46,6 +55,12 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
               </span>
             </div>
           </div>
+          <button 
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-1.5 text-slate-500 hover:text-white hover:bg-slate-800 rounded-lg transition-all"
+          >
+            <Settings className="w-4.5 h-4.5" />
+          </button>
         </div>
 
         {/* Main Navigation */}
@@ -108,6 +123,14 @@ export const VaultSidebar: React.FC<VaultSidebarProps> = ({
           <Progress value={usedPercentage} className="h-1.5 bg-slate-800" />
         </div>
       </div>
+
+      <SettingsDialog 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)}
+        username={username}
+        onUpdatePassword={onUpdatePassword}
+        onSignOut={onSignOut}
+      />
     </aside>
   );
 };
